@@ -7,7 +7,7 @@ from typing import Optional
 class Settings(BaseSettings):
     # ---- 应用 ----
     app_name: str = "financial-analysis-agent"
-    app_version: str = "3.0.0"
+    app_version: str = "3.1.0"
     debug: bool = False
     log_level: str = "INFO"
 

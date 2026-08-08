@@ -1,5 +1,48 @@
 # 迭代日志
 
+## v3.1 — 企业级降本增效 + 代码清理 (2026-08-09)
+
+### 移除
+- `app/agent/` — 旧 BaseAgent ReAct 循环 (已被 LangGraph 替代)
+- `app/utils.py` — 旧 Pipeline 工具函数 (已被 tools/ 替代)
+- `app/llm/` — 自建 LLM 适配器 (已被 ChatOpenAI 替代)
+- `--pipeline` CLI 模式 (已移除，仅保留 LangGraph Agent CLI)
+
+### 架构
+
+### 新增
+- **模型分层** (cheap/standard/premium): 搜索用便宜模型, 报告用旗舰 → 省 80% 推理成本
+- **TTL 响应缓存**: 5 分钟同样问题 0 token (`app/core/cache.py`)
+- **速率限制**: 滑动窗口 30次/分钟 (`app/core/rate_limiter.py`)
+- **熔断器**: 连续 5 次失败自动暂停 (`app/core/rate_limiter.py`)
+- **HTTP 连接池**: httpx 替代 requests, TCP 复用 (`app/core/http_client.py`)
+- **成本追踪**: `/metrics` + Token 计量 + 美元估算 (`app/core/metrics.py`)
+- **美股资金流**: `fetch_us_capital_flow` 工具
+- 文档: `docs/production-optimization.md`
+
+### 增强
+- K线工具: 成交量分布 + 资金流方向 + 量价背离
+- 美股工具: 机构持仓 + 卖空数据 + Top3 机构名单
+- 工具精准分配: Researcher 5个 / Analyst 3个 / Writer 0个
+
+---
+
+## v3.0 — LangGraph + FastAPI 企业级升级 (2026-08-09)
+
+### 新增
+- **LangGraph StateGraph**: 替代自建 ReAct 循环 (`app/graph/`)
+- **7 个 LangChain @tool**: ES搜索/K线/美股/资金流/股票识别/UZI/分析
+- **FastAPI REST API**: `/chat` `/chat/stream` `/health` `/metrics` `/docs`
+- **SSE 流式**: 实时 token 输出
+- **SQLite Checkpointer**: LangGraph 状态持久化
+- **pydantic-settings**: 配置管理 + `.env`
+- **structlog**: 结构化日志
+- **Docker**: 多阶段构建 + docker-compose
+- **pytest**: 单元测试 (tools + graph)
+- 文档: `docs/token-optimization.md`
+
+---
+
 ## v2.5 — Token 优化 + Bug 修复 (2026-08-09)
 
 ### 优化
