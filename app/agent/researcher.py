@@ -356,7 +356,7 @@ def _fetch_us_stock_info_impl(ticker, info_type="all"):
         try:
             import urllib.request
             cik_url = f"https://efts.sec.gov/LATEST/search-index?q={ticker}&categories=form-cat1&dateRange=custom&startdt=2024-01-01&enddt=2026-12-31"
-            req = urllib.request.Request(cik_url, headers={"User-Agent": "financial-agent/1.0 (jwuu0245@student.monash.edu)"})
+            req = urllib.request.Request(cik_url, headers={"User-Agent": "financial-agent/1.0"})
             with urllib.request.urlopen(req, timeout=10) as resp:
                 # 如果请求成功，解析最近的文件
                 pass

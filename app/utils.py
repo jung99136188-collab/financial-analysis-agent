@@ -712,7 +712,7 @@ def generate_final_report(concept, grouped_contents):
     url = f"{BASE_URL_VOLCENGINE}/chat/completions"
     
     # QUERY_5中的用法是将endpoint_id直接用作model参数的值
-    r1_endpoint = "ep-20250204184813-x7d7b"  # 硬编码确保正确
+    r1_endpoint = DEEPSEEK_R1_ENDPOINT  # 从 api_config 读取
     
     payload = {
         "model": r1_endpoint,  # 直接使用endpoint_id作为model值，不需要单独的endpoint_id字段

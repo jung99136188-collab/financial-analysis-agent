@@ -1,7 +1,11 @@
 from elasticsearch import Elasticsearch
 
-# ES连接配置
-es = Elasticsearch(['http://192.168.60.180:9201'], http_auth=('data_saas_ro', '7lDO#&^458c3$H!I'))
+# ES连接配置 — 替换为你的ES地址和账号
+# 生产环境建议用环境变量: ES_HOST / ES_USER / ES_PASS
+es = Elasticsearch(
+    ['http://your-es-host:9201'],
+    http_auth=('your-username', 'your-password')
+)
 
 # ES索引配置
 # 纪要索引配置
