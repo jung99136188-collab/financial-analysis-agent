@@ -269,5 +269,6 @@ Optional: `yfinance` (K-line data), `akshare` (A-share alternative)
 
 ## 文档 / Documentation
 
-- [CHANGELOG.md](CHANGELOG.md) — 迭代日志 (Chinese)
-- [docs/token-optimization.md](docs/token-optimization.md) — Token 优化方案 (Chinese)
+- [CHANGELOG.md](CHANGELOG.md) — 迭代日志 v1.0→v3.0 (Chinese)
+- [docs/token-optimization.md](docs/token-optimization.md) — Token 优化方案: 路由/分层/截断/缓存/压缩 (Chinese)
+- [docs/production-optimization.md](docs/production-optimization.md) — 企业级降本增效: 模型分层/缓存/限流/熔断/连接池

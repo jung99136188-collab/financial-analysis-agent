@@ -22,25 +22,72 @@ from config.agent_config import (
 )
 
 
-def _get_llm():
-    """创建 LangChain ChatOpenAI 实例（兼容 DeepSeek/Gemini）"""
-    from app.core.config import settings
-    return ChatOpenAI(
-        model=settings.llm_model,
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key,
-        temperature=0.3,
-    )
+# ================================================================
+# 模型分层策略 (降本核心)
+# ================================================================
+# Tier 1 "cheap":   分类/搜索 — 最小最便宜的模型
+# Tier 2 "standard": 分析 — 中等模型，够用即可
+# Tier 3 "premium":  报告 — 最强模型，保证质量
+# 每层可独立配置 provider/model/api_key
+
+from dataclasses import dataclass
+
+@dataclass
+class ModelTier:
+    provider: str   # openai_compatible | gemini
+    model: str
+    base_url: str
+    api_key: str
+    temperature: float = 0.3
+
+def _get_tier_configs():
+    """从配置加载三层模型"""
+    from app.core.config import settings as s
+    return {
+        "cheap": ModelTier(
+            provider="openai_compatible",
+            model=s.llm_model,           # deepseek-chat (便宜)
+            base_url=s.llm_base_url,
+            api_key=s.llm_api_key,
+            temperature=0.3,
+        ),
+        "standard": ModelTier(
+            provider=s.analyst_provider or s.llm_provider,
+            model=s.analyst_model or s.llm_model,
+            base_url=s.llm_base_url,
+            api_key=s.llm_api_key,
+            temperature=0.3,
+        ),
+        "premium": ModelTier(
+            provider=s.writer_provider or s.llm_provider,
+            model=s.writer_model or s.llm_model,
+            base_url=s.llm_base_url,
+            api_key=s.llm_api_key,
+            temperature=0.2,
+        ),
+    }
+
+def _get_llm(tier: str = "cheap"):
+    """按模型层级创建 LLM 实例"""
+    configs = _get_tier_configs()
+    cfg = configs.get(tier, configs["cheap"])
+    kwargs = dict(model=cfg.model, temperature=cfg.temperature)
+    if cfg.base_url:
+        kwargs["base_url"] = cfg.base_url
+    if cfg.api_key:
+        kwargs["api_key"] = cfg.api_key
+    return ChatOpenAI(**kwargs)
 
 
-# ---- 研究员工具 (搜索 + K线 + 美股 + 股票识别) ----
+# ---- 研究员工具 (搜索/K线/美股/识别/资金流) ----
 _RESEARCHER_TOOLS = [
     t for t in ALL_TOOLS
     if t.name in ("search_financial_docs", "fetch_kline_data",
-                   "fetch_us_stock_info", "identify_stocks")
+                   "fetch_us_stock_info", "fetch_us_capital_flow",
+                   "identify_stocks")
 ]
 
-# ---- 分析员工具 (汇总 + 对比 + UZI) ----
+# ---- 分析员工具 (汇总/对比/UZI) ----
 _ANALYST_TOOLS = [
     t for t in ALL_TOOLS
     if t.name in ("summarize_findings", "compare_stocks", "run_uzi_analysis")
@@ -63,8 +110,8 @@ def greeting_node(state: AgentState) -> AgentState:
 
 
 def researcher_node(state: AgentState) -> AgentState:
-    """研究员 Node — 搜集金融数据"""
-    llm = _get_llm()
+    """研究员 Node — 搜集金融数据 (cheap 模型)"""
+    llm = _get_llm("cheap")
     agent = create_react_agent(llm, _RESEARCHER_TOOLS, state_modifier=RESEARCHER_SYSTEM_PROMPT)
 
     messages = list(state["messages"])
@@ -89,8 +136,8 @@ def researcher_node(state: AgentState) -> AgentState:
 
 
 def analyst_node(state: AgentState) -> AgentState:
-    """分析员 Node — 深度分析数据"""
-    llm = _get_llm()
+    """分析员 Node — 深度分析数据 (standard 模型)"""
+    llm = _get_llm("standard")
     agent = create_react_agent(llm, _ANALYST_TOOLS, state_modifier=ANALYST_SYSTEM_PROMPT_CORE)
 
     research = state.get("research_data", "")
@@ -121,8 +168,8 @@ def analyst_node(state: AgentState) -> AgentState:
 
 
 def writer_node(state: AgentState) -> AgentState:
-    """撰写员 Node — 生成报告"""
-    llm = _get_llm()
+    """撰写员 Node — 生成报告 (premium 模型)"""
+    llm = _get_llm("premium")
     agent = create_react_agent(llm, [], state_modifier=WRITER_SYSTEM_PROMPT)
 
     analysis = state.get("analysis_result", "")
