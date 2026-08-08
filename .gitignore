@@ -26,7 +26,14 @@ env/
 output/
 *.xlsx
 *.txt
-test_*.py
+
+# 临时测试文件(项目根目录)
+/test_*.py
+
+# 数据持久化
+data/
+*.db
+.env
 
 # === 重要：敏感配置（含真实API密钥，严禁上传） ===
 config/api_config.py

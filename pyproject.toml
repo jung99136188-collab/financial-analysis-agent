@@ -1,0 +1,29 @@
+[project]
+name = "financial-analysis-agent"
+version = "3.0.0"
+description = "Multi-Agent Financial Analysis System — LangGraph + FastAPI Enterprise Edition"
+requires-python = ">=3.10"
+dependencies = [
+    "langgraph>=0.2.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "sse-starlette>=2.0.0",
+    "structlog>=24.0.0",
+    "pydantic-settings>=2.0.0",
+    "pyyaml>=6.0",
+    "elasticsearch>=7.0.0,<8.0.0",
+    "requests>=2.25.0",
+    "pandas>=1.3.0",
+    "openpyxl>=3.0.0",
+    "python-dateutil>=2.8.2",
+]
+
+[project.optional-dependencies]
+kline = ["yfinance>=0.2.0"]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.24.0", "httpx>=0.27.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
