@@ -10,12 +10,12 @@ Analyst Agent — 金融数据分析专家
 import json
 import sys
 import os
-import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from config.agent_config import (
-    ANALYST_SYSTEM_PROMPT,
+    ANALYST_SYSTEM_PROMPT_CORE,
+    ANALYST_SYSTEM_PROMPT_EXTENDED,
 )
 from .base import BaseAgent
 
@@ -119,6 +119,34 @@ ANALYST_TOOLS = [
                 "required": ["ticker"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "analyze_technical_chart",
+            "description": (
+                "对K线数据进行技术面深度分析，识别形态和趋势信号。"
+                "分析内容包括：趋势判断（多头/空头/震荡）、均线系统分析、"
+                "经典形态识别（头肩顶/底、W底/M顶、三角形整理、旗形等）、"
+                "量价关系分析、支撑阻力位识别、MACD/RSI/KDJ等指标信号。"
+                "输入: fetch_kline_data 返回的K线数据。"
+                "输出: 结构化的技术面分析报告。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "kline_data": {
+                        "type": "string",
+                        "description": "fetch_kline_data 工具返回的K线数据（含OHLCV、均线、成交量等）"
+                    },
+                    "ticker": {
+                        "type": "string",
+                        "description": "股票代码，用于标注"
+                    }
+                },
+                "required": ["kline_data"]
+            }
+        }
     }
 ]
 
@@ -212,6 +240,32 @@ def _extract_key_metrics_impl(llm_client, text):
     return _call_analysis_llm(llm_client, prompt, max_tokens=1000)
 
 
+def _analyze_technical_chart_impl(llm_client, kline_data, ticker=""):
+    """LLM 驱动的技术面分析（形态识别 + 趋势判断）"""
+    prompt = f"""请对以下K线数据进行专业的技术面分析。
+
+股票: {ticker or '未知'}
+
+## 分析维度
+1. **趋势判断**: 当前处于上升/下降/震荡趋势？给出判断依据
+2. **均线系统**: 均线排列方向、金叉/死叉信号、支撑/压力位
+3. **形态识别**: 是否出现经典形态（头肩顶/底、W底/M顶、三角形、旗形、箱体等）
+4. **量价关系**: 放量上涨/缩量下跌的含义、量价背离信号
+5. **关键位置**: 支撑位、阻力位、突破/破位判断
+6. **综合评分**: 技术面 1-10 分
+
+## K线数据
+{kline_data[:5000]}
+
+## 要求
+- 每个判断都要引用具体数据（如"MA5=187.5上穿MA20=182.3，形成金叉"）
+- 形态识别要描述位置和特征（如"在60日高点附近形成双顶，颈线位于175"）
+- 给出具体的支撑/阻力价位
+- 最后给出技术面综合评分（1-10）及操作建议（多头持有/观望/减仓/空仓）
+"""
+    return _call_analysis_llm(llm_client, prompt, max_tokens=2000)
+
+
 def _run_uzi_analysis_impl(ticker, depth="medium"):
     """调用 UZI-Skill CLI 分析股票"""
     import subprocess
@@ -290,6 +344,11 @@ class AnalystAgent(BaseAgent):
                 llm_client=self._analysis_llm,
                 text=args.get("text", "")
             ),
+            "analyze_technical_chart": lambda args: _analyze_technical_chart_impl(
+                llm_client=self._analysis_llm,
+                kline_data=args.get("kline_data", ""),
+                ticker=args.get("ticker", ""),
+            ),
             "run_uzi_analysis": lambda args: _run_uzi_analysis_impl(
                 ticker=args.get("ticker", ""),
                 depth=args.get("depth", "medium"),
@@ -297,7 +356,8 @@ class AnalystAgent(BaseAgent):
         }
         super().__init__(
             name="Analyst",
-            system_prompt=ANALYST_SYSTEM_PROMPT,
+            system_prompt=ANALYST_SYSTEM_PROMPT_CORE,
+            extended_prompt=ANALYST_SYSTEM_PROMPT_EXTENDED,
             tools=ANALYST_TOOLS,
             llm_client=llm_client,
             tool_handlers=tool_handlers,

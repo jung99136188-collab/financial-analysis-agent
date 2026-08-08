@@ -208,6 +208,23 @@ def process_question(question):
     
     return final_report
 
+def classify_query(question: str) -> str:
+    """智能路由：关键词匹配决定调用哪些 Agent，0 token 开销"""
+    q = question.lower()
+    # 社交/帮助 → 直接回
+    if any(w in q for w in ["你好", "帮助", "怎么用", "谢谢", "再见"]):
+        return "direct"
+    # 搜索类 → 只调 Researcher
+    if any(w in q for w in ["搜索", "查", "找", "有没有", "搜一下", "查找"]):
+        return "research_only"
+    # 分析/盘面 → Researcher + Analyst
+    if any(w in q for w in ["分析", "对比", "怎么看", "盘面", "走势", "形态", "k线", "技术面",
+                              "基本面", "估值", "报告", "怎么样", "如何", "是什么", "什么意思"]):
+        return "research_analysis"
+    # 默认走全链路
+    return "full"
+
+
 def agent_chat():
     """多 Agent 协作模式 — Coordinator 调度专业 Agent 协作"""
     from app.agent import CoordinatorAgent, ResearcherAgent, AnalystAgent, WriterAgent
@@ -262,7 +279,41 @@ def agent_chat():
                 print("请输入有效问题。")
                 continue
 
-            print()  # 空行分隔
+            # ---- 智能路由 ----
+            route = classify_query(question)
+            print(f"[路由] {route}")
+
+            if route == "direct":
+                print("\n你好！我是金融分析助手，可以帮你：\n"
+                      "  • 搜索金融文档（纪要/研报/公告/点评）\n"
+                      "  • 分析股票盘面（K线/均线/形态）\n"
+                      "  • 获取美股数据（财报/SEC/评级）\n"
+                      "  • 生成专业分析报告\n\n"
+                      "直接输入问题即可，例如：'分析茅台最近走势'")
+                continue
+
+            print()
+
+            if route == "research_only":
+                # 跳过 Coordinator/Analyst/Writer，直接调 Researcher
+                result = researcher.run(question)
+                print(f"\n{'='*60}")
+                print(result)
+                print(f"{'='*60}\n")
+                continue
+
+            if route == "research_analysis":
+                # 跳过 Coordinator/Writer，Researcher → Analyst
+                # 注意：Analyst 需要数据，先让 Researcher 搜索
+                raw_data = researcher.run(question)
+                analysis_task = f"请对以下数据进行分析，回答用户问题：{question}\n\n数据：\n{raw_data[:4000]}"
+                result = analyst.run(analysis_task, deep_mode=("深度" in question or "详细" in question))
+                print(f"\n{'='*60}")
+                print(result)
+                print(f"{'='*60}\n")
+                continue
+
+            # full: 完整 Coordinator 链路
             result = coordinator.chat(question)
             print(f"\n{'='*60}")
             print(result)

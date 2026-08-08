@@ -222,12 +222,36 @@ UZI_PATH = "../UZI-Skill"
 
 ## 数据源
 
+### A股（ES 索引）
+
 | 数据源 | 索引 | 时间范围 | 说明 |
 |--------|------|----------|------|
 | 路演纪要 | roadshow_summary | 近3个月 | MT 记录 |
 | 研究报告 | report | 近3个月 | 券商研报 |
 | 股票公告 | stock_announcement | 近6个月 | 公司公告 |
 | 分析师点评 | comment | 近2个月 | txt 类点评 |
+
+### 美股（多通道）
+
+| 通道 | 覆盖内容 | 说明 |
+|------|---------|------|
+| Yahoo Finance | 实时行情、公司基本信息 | 免费，无需配置 |
+| SEC EDGAR | 10-K/10-Q/8-K 文件 | 免费公开 |
+| ES 美股索引 | 财报、电话会、分析师评级 | 可选，在 `es_config.py` 中配置 |
+| UZI-Skill | 完整量化分析 | `run_uzi_analysis('AAPL')` |
+
+### 盘面/技术分析
+
+| 工具 | 提供内容 | 说明 |
+|------|---------|------|
+| `fetch_kline_data` | OHLCV + MA5/MA20/MA60 + 均线排列 + 量比 | 基于 yfinance，A股/美股/港股通用 |
+| `analyze_technical_chart` | 趋势判断、形态识别、量价分析、支撑阻力 | LLM 驱动的技术面分析 |
+| UZI-Skill | 完整技术面（MACD/RSI/布林带/阶段判断） | `run_uzi_analysis` 自动包含 |
+
+```bash
+# 需要先安装
+pip install yfinance
+```
 
 ## 依赖
 

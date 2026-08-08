@@ -60,4 +60,34 @@ COMMENT_QUERY = {
         }
     }
 }
-COMMENT_SOURCE = ["_id", "title", "time", "sec", "content"] 
+COMMENT_SOURCE = ["_id", "title", "time", "sec", "content"]
+
+# ============================================================
+# 美股数据索引（可选 — 如果你的ES集群有这些索引，取消注释即可启用）
+# ============================================================
+# US_EARNINGS_INDEX = "us_stock_earnings_index"
+# US_EARNINGS_QUERY = {
+#     "query": {"bool": {"must": [
+#         {"term": {"is_deleted": 0}},
+#         {"range": {"report_date": {"gt": "2025-01-01 00:00:00"}}}
+#     ]}}
+# }
+# US_EARNINGS_SOURCE = ["_id", "title", "report_date", "ticker", "content"]
+#
+# US_FILINGS_INDEX = "us_sec_filings_index"
+# US_FILINGS_QUERY = {
+#     "query": {"bool": {"must": [
+#         {"term": {"is_deleted": 0}},
+#         {"range": {"filing_date": {"gt": "2025-01-01 00:00:00"}}}
+#     ]}}
+# }
+# US_FILINGS_SOURCE = ["_id", "title", "filing_date", "ticker", "form_type", "content"]
+#
+# US_ANALYST_INDEX = "us_analyst_ratings_index"
+# US_ANALYST_QUERY = {
+#     "query": {"bool": {"must": [
+#         {"term": {"is_deleted": 0}},
+#         {"range": {"date": {"gt": "2025-01-01 00:00:00"}}}
+#     ]}}
+# }
+# US_ANALYST_SOURCE = ["_id", "title", "date", "ticker", "analyst", "rating", "target_price", "content"] 
