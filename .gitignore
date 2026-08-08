@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+environ/
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+*~
+
+# 输出文件
+output/
+*.xlsx
+*.txt
+test_*.py
+
+# === 重要：敏感配置（含真实API密钥，严禁上传） ===
+config/api_config.py
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
